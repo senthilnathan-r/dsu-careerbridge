@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 30000,
+  timeout: 120000, // 2 min — AI resume operations (tailor/generate/enhance) can take 60-90s
 });
 
 // Attach token to every request

@@ -74,6 +74,11 @@ async function bootstrap() {
     },
   });
 
+  // Increase HTTP server timeouts for long-running AI operations (resume tailor/generate)
+  const httpServer = app.getHttpServer();
+  httpServer.requestTimeout = 120000;  // 2 min
+  httpServer.keepAliveTimeout = 125000; // slightly above requestTimeout
+
   await app.listen(port);
   console.log(`\n🚀 DSU CareerBridge API running at: http://localhost:${port}/${apiPrefix}`);
   console.log(`📖 Swagger docs at: http://localhost:${port}/api/docs\n`);

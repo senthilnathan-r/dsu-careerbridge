@@ -15,6 +15,8 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        timeout: 120000,    // 2 min — matches axios client timeout for AI calls
+        proxyTimeout: 120000,
       },
     },
   },
