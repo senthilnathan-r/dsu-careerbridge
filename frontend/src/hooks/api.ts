@@ -192,7 +192,24 @@ export function useUploadResume() {
 export function useGenerateResume() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => apiPost<Resume>('/students/me/resume/generate'),
+    mutationFn: (params?: { targetRole?: string; additionalNotes?: string }) =>
+      apiPost<Resume>('/students/me/resume/generate', params ?? {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.studentResumes }),
+  });
+}
+
+export function useSetMasterResume() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (resumeId: string) => apiPut<Resume>(`/students/me/resume/${resumeId}/set-master`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.studentResumes }),
+  });
+}
+
+export function useDeleteResume() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (resumeId: string) => apiDelete<void>(`/students/me/resume/${resumeId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: QK.studentResumes }),
   });
 }
