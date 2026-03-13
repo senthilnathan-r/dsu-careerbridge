@@ -1,6 +1,8 @@
 // ATS-friendly professional resume HTML template
 export function RESUME_TEMPLATE_HTML(resumeData: any): string {
-  const { summary, sections } = resumeData;
+  const { summary, sections, name, contactLine } = resumeData;
+  const studentName = name || 'Student Name';
+  const contactStr = contactLine || '';
 
   const renderSection = (section: any): string => {
     switch (section.type) {
@@ -75,8 +77,8 @@ export function RESUME_TEMPLATE_HTML(resumeData: any): string {
 </head>
 <body>
   <div class="header">
-    <div class="name">{{STUDENT_NAME}}</div>
-    <div class="contact">{{CONTACT_LINE}}</div>
+    <div class="name">${studentName}</div>
+    <div class="contact">${contactStr}</div>
   </div>
 
   ${summary ? `

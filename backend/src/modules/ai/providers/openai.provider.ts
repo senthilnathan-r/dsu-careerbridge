@@ -145,7 +145,10 @@ Return JSON:
     const userContent = JSON.stringify(input, null, 2);
     const result = await this.chat(system, `Generate resume for:\n${userContent}`, 0.4);
     const parsed = JSON.parse(result) as GeneratedResume;
-    parsed.htmlContent = RESUME_TEMPLATE_HTML(parsed);
+    const sp = input.studentProfile;
+    const name = [sp.firstName, sp.lastName].filter(Boolean).join(' ') || 'Student';
+    const contactParts = [sp.email, sp.phone, sp.linkedinUrl, sp.githubUrl].filter(Boolean);
+    parsed.htmlContent = RESUME_TEMPLATE_HTML({ ...parsed, name, contactLine: contactParts.join(' | ') });
     return parsed;
   }
 
@@ -177,7 +180,27 @@ Return JSON:
       0.4,
     );
     const enhanced = JSON.parse(result) as EnhancedResume;
-    // Generate HTML for enhanced resume
+    // Build sections from improved bullets grouped by section type
+    const sectionMap: Record<string, string[]> = {};
+    for (const b of enhanced.improvedBullets || []) {
+      const key = b.section || 'experience';
+      if (!sectionMap[key]) sectionMap[key] = [];
+      sectionMap[key].push(b.improved);
+    }
+    const enhancedSections = Object.entries(sectionMap).map(([type, bullets], i) => ({
+      type,
+      title: type.charAt(0).toUpperCase() + type.slice(1),
+      content: bullets,
+      order: i + 1,
+    }));
+    const contactInfo = (parsedContent as any)?.contactInfo || {};
+    enhanced.htmlContent = RESUME_TEMPLATE_HTML({
+      summary: enhanced.improvedSummary,
+      sections: enhancedSections.length ? enhancedSections : [],
+      name: contactInfo.name || '',
+      contactLine: [contactInfo.email, contactInfo.phone, contactInfo.linkedin, contactInfo.github]
+        .filter(Boolean).join(' | '),
+    });
     return enhanced;
   }
 
@@ -214,7 +237,25 @@ Return JSON:
       `Student data: ${JSON.stringify(studentData)}\n\nJob Description: ${JSON.stringify(jobDescription)}\n\nRaw JD: ${rawJdText.substring(0, 2000)}`,
       0.5,
     );
-    return JSON.parse(result) as TailoredResume;
+    const tailored = JSON.parse(result) as TailoredResume;
+
+    // Extract student name/contact from whichever studentData shape was passed
+    const prof = studentData.profile;
+    const ci = studentData.structuredContent?.contactInfo;
+    const name = prof
+      ? [prof.firstName, prof.lastName].filter(Boolean).join(' ')
+      : ci?.name || '';
+    const contactLine = prof
+      ? [prof.linkedinUrl, prof.githubUrl, prof.phone].filter(Boolean).join(' | ')
+      : [ci?.email, ci?.phone, ci?.linkedin, ci?.github].filter(Boolean).join(' | ');
+
+    tailored.htmlContent = RESUME_TEMPLATE_HTML({
+      summary: tailored.targetedSummary,
+      sections: tailored.prioritizedSections || [],
+      name,
+      contactLine,
+    });
+    return tailored;
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
